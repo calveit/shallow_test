@@ -6,10 +6,9 @@
 #include <numeric>
 
 #include "game_state.h"
+#include "optick.h"
 #include "parallel_for.h"
 #include "vector2.h"
-
-#include "../Optick_1.3.1/include/optick.h"
 
 
 struct VectorSystem
@@ -57,16 +56,6 @@ struct VectorSystem
 		parallelFor(indices, [&](int i)
 			{
 				output[i] = position + ShallowTest::Vector2::RandomUnit() * ((float)(std::rand() - RAND_MAX / 2) / (float)RAND_MAX) * radius;
-			});
-	}
-
-	static void DirectionTowards(const std::vector<int>& indices, std::vector<PositionVelocity>& positionVelocity, std::vector<ShallowTest::Vector2>& direction, ShallowTest::Vector2 position)
-	{
-		OPTICK_EVENT(__FUNCTION__);
-		parallelFor(indices, [&](int i)
-			{
-				direction[i] = position - positionVelocity[i].Position;
-				direction[i].SafeNormalize();
 			});
 	}
 };
@@ -453,18 +442,6 @@ public:
 		parallelFor(indices, [&](int i)
 			{
 				output[i] = Constants::armySpeed * (float)std::rand() / (float)RAND_MAX;
-			});
-	}
-
-
-	static void CalculateDesiredPosition(const std::vector<int>& indices, const std::vector<PositionVelocity>& input, float deltaT, std::vector<ShallowTest::Vector2>& output)
-	{
-		OPTICK_EVENT(__FUNCTION__);
-		parallelFor(indices, [&](int i)
-			{
-				output[i] = input[i].Position + input[i].Velocity * deltaT;
-				output[i].x = std::clamp<float>(output[i].x, 0, Constants::screenWidth - 1);
-				output[i].y = std::clamp<float>(output[i].y, 0, Constants::screenHeight - 1);
 			});
 	}
 

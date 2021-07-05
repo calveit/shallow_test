@@ -1,7 +1,8 @@
 #pragma once
+#include <vector>
+
 #include "raylib.h"
 
-#include <vector>
 
 Color operator+(const Color& c1, const Color& c2);
 Color& operator+=(Color& c, const Color& rhs);

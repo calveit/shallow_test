@@ -2,6 +2,7 @@
 #include <math.h>
 #include <random>
 
+
 namespace ShallowTest
 {
 	class Vector2

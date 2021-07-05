@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
+
 Color operator+(const Color& c1, const Color& c2)
 {
     Color c;

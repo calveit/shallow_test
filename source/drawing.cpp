@@ -2,19 +2,19 @@
 
 #include <algorithm>
 #include <atomic>
-#include "constants.h"
 #include <numeric>
-#include "parallel_for.h"
-#include "raylib.h"
-#include "raylib_extensions.h"
 #include <string>
 #include <vector>
 #include <thread>
 
+#include "constants.h"
 #include "optick.h"
+#include "parallel_for.h"
+#include "raylib.h"
+#include "raylib_extensions.h"
+
 
 using Opt = DrawingContext::Options;
-
 
 template<typename E>
 struct enable_bitmask_operators {

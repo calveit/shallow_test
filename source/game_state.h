@@ -1,14 +1,12 @@
 #pragma once
 #include <atomic>
-#include "constants.h"
-#include "free_list.h"
-#include "vector2.h"
 
+#include "constants.h"
+#include "vector2.h"
 
 typedef int tCountryIndex;
 typedef int tProvinceIndex;
 typedef int tArmyIndex;
-
 
 template <typename T>
 struct AtomWrapper
@@ -59,12 +57,6 @@ struct Province
 	AtomWrapper<int> armyCount = 0;
 };
 
-struct Combat
-{
-	int combatantPerCountryIndex = -1;
-	int allCombatantsCount;
-};
-
 struct Army
 {
 	ShallowTest::Vector2 position{ 100, 100 };
@@ -102,19 +94,4 @@ struct Army
 
 	char getHitPoints() { return (flags & 0x0000FF00) >> 8; }
 	void setHitPoints(unsigned char hitPoints) { flags = (flags & ~0x0000FF00) | hitPoints << 8; }
-};
-
-struct DyingArmy
-{
-	ShallowTest::Vector2 position;
-	
-	// 1 Valid
-	int Flags = 0x000000;
-	float remaining;
-};
-
-struct PositionVelocity
-{
-	ShallowTest::Vector2 Position;
-	ShallowTest::Vector2 Velocity;
 };

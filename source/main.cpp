@@ -1,19 +1,17 @@
-#include "drawing.h"
-#include <functional>
-#include "game_state.h"
-#include "parallel_for.h"
-#include "systems.h"
-#include "raylib.h"
-#include "raylib_extensions.h"
-
-#include <algorithm>
 #include <chrono>
+#include <functional>
 #include <string>
 #include <thread>
 #include <time.h>
-#include <tuple>
 
-#include "../Optick_1.3.1/include/optick.h"
+#include "drawing.h"
+#include "game_state.h"
+#include "parallel_for.h"
+#include "raylib.h"
+#include "raylib_extensions.h"
+#include "systems.h"
+#include "optick.h"
+
 
 void main()
 {
@@ -54,7 +52,6 @@ void main()
         provinces[ArmyToProvinceAssignmentSystem::GetProvinceIndexForPosition(CountryPositions[i])].countryIndex = i;
     }
 
-    std::vector<PositionVelocity> armyPositionVelocity; armyPositionVelocity.resize(Constants::maxArmies);
     std::vector<ShallowTest::Vector2> armyVectors1; armyVectors1.resize(Constants::maxArmies);
     std::vector<ShallowTest::Vector2> armyVectors2; armyVectors2.resize(Constants::maxArmies);
     std::vector<float> armyFloats; armyFloats.resize(Constants::maxArmies);

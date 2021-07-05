@@ -1,10 +1,11 @@
 #pragma once
-#include <atomic>
-#include "constants.h"
 #include <functional>
+#include <vector>
+
+#include "constants.h"
 #include "game_state.h"
 #include "raylib.h"
-#include <vector>
+
 
 template<class T>
 using ref = std::reference_wrapper<T>;

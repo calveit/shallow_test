@@ -6,7 +6,6 @@ void serialFor(const std::vector<int>& collection, std::function<void(int)> call
 	std::for_each(std::execution::seq, collection.begin(), collection.end(), callback);
 };
 
-
 void parallelFor(const std::vector<int>& collection, std::function<void(int)> callback)
 {
 	std::for_each(std::execution::par_unseq, collection.begin(), collection.end(), callback);
