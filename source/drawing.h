@@ -39,6 +39,8 @@ struct DrawingContext
 	std::atomic<int> drawingFlag;
 	std::atomic<int> copyStateFlag;
 
+	float interactionRadius;
+
 	enum class Options : int
 	{
 		None = 0,

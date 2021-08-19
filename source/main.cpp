@@ -133,6 +133,7 @@ void main()
 
     PeriodicTask spawnTask([&]{ SpawnSystem::Spawn(validArmyIndices, armies, countryIndices, countries, desiredDeltaTimeInS, spawnedArmiesCountByCountry); }, 0.01f);
     float timePassed = 0.0f;
+    float mouseInteractionRadius = (float)Constants::interactionRadius;
 
     while (true)
     {
@@ -166,25 +167,31 @@ void main()
             ArmySystem::CalcPositionFromFlow(validArmyIndices, armies, flow, randomVectors[currentRandomSet], desiredDeltaTimeInS);
             CountrySystem::CalcPositionFromFlow(countryIndices, countries, flow, randomVectors[currentRandomSet], desiredDeltaTimeInS);
 
+            Vector2 mousePos = GetMousePosition();
+            mouseInteractionRadius = std::clamp(mouseInteractionRadius + GetMouseWheelMove() * 5.0f, (float)Constants::minInteractionRadius, (float)Constants::maxInteractionRadius);
+
             {
                 OPTICK_EVENT("Wait for drawing");
                 // Wait for drawing thread
                 while (drawingContext.drawingFlag)
                     std::this_thread::yield();
 
+                drawingContext.interactionRadius = mouseInteractionRadius;
                 drawingContext.copyStateFlag = 1;
-            }
-
+            }           
 
             CombatSystem::DamageArmies(validArmyIndices, armies, provinces);
+            if (IsMouseButtonDown(1))
+                CombatSystem::DamageArmiesWithinRadius(validArmyIndices, armies, { mousePos.x, mousePos.y }, mouseInteractionRadius);
+    
             CombatSystem::KillArmies(validArmyIndices, armies, killedArmiesIndices);
             spawnTask.update(desiredDeltaTimeInS);
-
-
-            Vector2 pos = { -1000, -1000 };
+            
             if (IsMouseButtonDown(0))
-                pos = GetMousePosition();
-            VectorFieldSystem::CreatePressure(provinceIndices, provinces, { pos.x, pos.y }, pressure);
+                VectorFieldSystem::CreatePressure(provinceIndices, provinces, { mousePos.x, mousePos.y }, mouseInteractionRadius, pressure);
+            else
+                VectorFieldSystem::ClearPressure(provinceIndices, provinces, pressure);
+
             VectorFieldSystem::CreateFlow(provinceIndices, left, top, right, bottom, pressure, flow, timePassed);
 
             cleanup.join();

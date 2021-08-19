@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <bitset>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -41,7 +42,20 @@ void mainDraw(const GameState& gameState, DrawingContext& context)
 
     // Load star texture
     Texture2D starTexture = LoadTexture("star.png");
+    Image starImage = GetTextureData(starTexture);
+    Color* starRaw = (Color*)starImage.data;
 
+    std::vector<Color*> countryRaw;
+    countryRaw.resize(Constants::maxCountries);
+
+    for (int i = 0; i < Constants::maxCountries; ++i)
+    {
+        countryRaw[i] = new Color[starImage.width * starImage.height];
+        for (int pixel = 0; pixel < starImage.width * starImage.height; ++pixel)
+        {
+            countryRaw[i][pixel] = starRaw[pixel] * gameState.countryColors.get()[i];
+        }
+    }
 
     while (!WindowShouldClose())
     {
@@ -71,6 +85,7 @@ void mainDraw(const GameState& gameState, DrawingContext& context)
 
             Color* pixels = new Color[Constants::screenWidth * Constants::screenHeight];
             std::fill(pixels, pixels + Constants::screenWidth * Constants::screenHeight, BLACK);
+            std::bitset<Constants::maxArmies> bitset;
 
             {
                 OPTICK_EVENT("Armies");
@@ -84,13 +99,16 @@ void mainDraw(const GameState& gameState, DrawingContext& context)
                         Color c = gameState.countryColors.get()[countryIndex];
                         c.a = 150;
 
-                        int pixelIndex = (int)context.armies[i].position.y * Constants::screenWidth + (int)context.armies[i].position.x;
+                        int x = (int)context.armies[i].position.x;
+                        int y = (int)context.armies[i].position.y;
+                        int pixelIndex = y * Constants::screenWidth + x;
 
                         if (context.armies[i].getHitPoints() == 0)
                         {
                             deadArmies[pixelIndex] = 15;
                         }
 
+                        
                         pixels[pixelIndex] += c;
 
                         const bool right = pixelIndex + 1 < Constants::screenWidth * Constants::screenHeight;
@@ -106,8 +124,24 @@ void mainDraw(const GameState& gameState, DrawingContext& context)
                             pixels[pixelIndex + Constants::screenWidth] += c;
                         if (top)
                             pixels[pixelIndex - Constants::screenWidth] += c;
+
+                        int screenHBegin = std::max(0, x - starImage.width / 2); //std::max(0, starImage.width - x);
+                        int screenVBegin = std::max(0, y - starImage.height / 2); //std::max(0, starImage.height - y);
+                        int screenHEnd = std::min(Constants::screenWidth, x - starImage.width / 2 + starImage.width);
+                        int screenVEnd = std::min(Constants::screenHeight, y - starImage.height / 2+ starImage.height);
+
+                        /*
+                        for (int line = screenVBegin; line < screenVEnd; ++line)
+                        {
+                            int index = line * Constants::screenWidth + screenHBegin;
+                            int end = index + (screenHEnd - screenHBegin);
+                            std::copy(countryRaw[countryIndex] + (line - screenVBegin) * starImage.width, countryRaw[countryIndex] + (line + 1 - screenVBegin) * starImage.width, pixels + index);
+                        }
+                        */
+                        bitset.set(index);
                     });
 
+                /*
                 parallelFor(deadArmiesIndices, [&](int pixelIndex)
                     {
                         if (deadArmies[pixelIndex] > 0)
@@ -134,6 +168,7 @@ void mainDraw(const GameState& gameState, DrawingContext& context)
                             --deadArmies[pixelIndex];
                         }
                     });
+                    */
 
             }
 
@@ -248,6 +283,8 @@ void mainDraw(const GameState& gameState, DrawingContext& context)
             {
                 DrawText((std::to_string(context.countries[i].armyCount._a) + " dots").c_str(), 10, 35 + i * 20, 15, gameState.countryColors.get()[i]);
             }
+            
+            DrawCircleLines(GetMouseX(), GetMouseY(), context.interactionRadius, GRAY);
 
             EndDrawing();
         }

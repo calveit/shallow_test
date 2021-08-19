@@ -19,7 +19,11 @@ struct Constants
 	static const int maxArmies = 1000000;
 
 	static const int spawnPerProvincePerSecond = 50;
-	static const int constantSpawnRate = 1000;
+	static const int constantSpawnRate = 100;
+
+	static const int interactionRadius = 200;
+	static const int minInteractionRadius = 20;
+	static const int maxInteractionRadius = 1000;
 };
 
 static_assert(Constants::screenWidth% Constants::provinceSize == 0);

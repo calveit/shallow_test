@@ -27,7 +27,17 @@ Color operator*(const Color& c, float mul)
     out.g = (char)(c.g * mul);
     out.b = (char)(c.b * mul);
     out.a = (char)(c.a * mul);
-    return c;
+    return out;
+}
+
+Color operator*(const Color& c1, const Color& c2)
+{
+    Color out;
+    out.r = (char)(c1.r * c2.r);
+    out.g = (char)(c1.g * c2.g);
+    out.b = (char)(c1.b * c2.b);
+    out.a = c1.a;
+    return out;
 }
 
 Color hsv2rgb(int h, float s, float v)
@@ -75,7 +85,7 @@ std::vector<Color> generateRandomColors(int count)
     for (int i = 0; i < count; ++i)
     {
         h += sep;
-        colors.emplace_back(hsv2rgb((int)std::round(h) % 360, 0.5f, 0.15f));
+        colors.emplace_back(hsv2rgb((int)std::round(h) % 360, 0.95f, 0.75f));
     }
 
     return colors;

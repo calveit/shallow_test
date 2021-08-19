@@ -82,7 +82,7 @@ struct VectorFieldSystem
 
 	}
 
-	static void CreatePressure(const std::vector<int>& indices, const std::vector<Province>& provinces, const ShallowTest::Vector2 position, std::vector<float>& pressure)
+	static void CreatePressure(const std::vector<int>& indices, const std::vector<Province>& provinces, const ShallowTest::Vector2 position, float radius, std::vector<float>& pressure)
 	{
 		OPTICK_EVENT(__FUNCTION__);
 
@@ -93,7 +93,18 @@ struct VectorFieldSystem
 				float x = (float)(i - y * Constants::gridWidth);
 		
 				ShallowTest::Vector2 thisPosition{ x * Constants::provinceSize + Constants::provinceSize / 2, y * Constants::provinceSize + Constants::provinceSize / 2 };
-				pressure[i] = std::clamp((thisPosition - position).Length(), 0.0f, 200.0f);
+				pressure[i] = std::clamp((thisPosition - position).Length(), 0.0f, radius);
+			});
+	}
+
+	static void ClearPressure(const std::vector<int>& indices, const std::vector<Province>& provinces, std::vector<float>& pressure)
+	{
+		OPTICK_EVENT(__FUNCTION__);
+
+		pressure.resize(indices.size());
+		parallelFor(indices, [&](int i)
+			{
+				pressure[i] = 0.0f;
 			});
 	}
 
@@ -115,7 +126,7 @@ struct VectorFieldSystem
 
 				float horizontalFactor = (float)x / (float)Constants::gridWidth;
 				float verticalFactor = (float)y / (float)Constants::gridHeight;
-				float factor1 = std::cos(time / 1000.0f);
+				float factor1 = std::cos(2 * time / 1000.0f);
 				float factor2 = std::sin(time / 1000.0f);
 				float verticalMult = std::cos((horizontalFactor) * 3.14f + factor2) + std::cos(verticalFactor * 3.14f);
 				float horizontalMult = std::sin((verticalFactor) * 3.14f - 3.14f / 2.0f + factor1) + std::cos(horizontalFactor * 3.14f);
@@ -131,10 +142,10 @@ struct VectorFieldSystem
 				ShallowTest::Vector2 bottomFlow = bottom * (bottomIndices[i] == -1 ? 0 : (pressure[bottomIndices[i]] - thisPressure));
 				ShallowTest::Vector2 pressureImpact = (leftFlow + topFlow  + rightFlow * 0.f + bottomFlow * 0.f);
 				pressureImpact.SafeNormalize();
-				//ShallowTest::Vector2 randomImpact = ShallowTest::Vector2::RandomUnit();
+				ShallowTest::Vector2 randomImpact = ShallowTest::Vector2::RandomUnit();
 				ShallowTest::Vector2 backgroundImpact = left * leftMult + top * topMult + right * rightMult + bottom * bottomMult;
 				backgroundImpact.SafeNormalize();
-				flow[i] = backgroundImpact + /*randomImpact + */ pressureImpact * 3.5f;
+				flow[i] = backgroundImpact /* + randomImpact */+ pressureImpact * 3.5f;
 			});
 	}
 };
@@ -351,8 +362,13 @@ public:
 		int batchCount = splitParallelForGetBatchCount(armyIndices, 65535);
 
 		std::vector<int> armyCounts;
-		armyCounts.resize(batchCount * Constants::maxCountries);
+		armyCounts.resize(batchCount * Constants::maxCountries, 0);
 		const int armyCount = (int)armyIndices.size();
+
+		for (int i : countryIndices)
+		{
+			countries[i].armyCount._a = 0;
+		}
 
 		splitParallelFor(armyIndices, 65535, [&](auto& range, int batchIndex)
 			{
@@ -365,7 +381,7 @@ public:
 
 		for (int i = 0; i < armyCounts.size(); ++i)
 		{
-			countries[i / batchCount].armyCount._a += armyCounts[i];
+			countries[i % Constants::maxCountries].armyCount._a += armyCounts[i];
 		}
 	}
 };
@@ -396,7 +412,7 @@ public:
 		OPTICK_EVENT(__FUNCTION__);
 		parallelFor(indices, [&](int i)
 			{
-				ShallowTest::Vector2 velocity = (flow[armies[i].provinceIndex] * 0.5f + randomVectors[i] * 0.5f);
+				ShallowTest::Vector2 velocity = (flow[armies[i].provinceIndex] * 0.7f + randomVectors[i] * 0.5f);
 				armies[i].position = armies[i].position + velocity * delta * Constants::armySpeed;
 				armies[i].position.x = std::clamp<float>(armies[i].position.x, 0, Constants::screenWidth - 1);
 				armies[i].position.y = std::clamp<float>(armies[i].position.y, 0, Constants::screenHeight - 1);
@@ -405,7 +421,6 @@ public:
 				assert(armies[i].position.y >= 0.0f);
 			});
 	}
-
 
 	static void SetValid(const std::vector<int>& indices, bool valid, std::vector<Army>& output)
 	{
@@ -586,6 +601,19 @@ public:
 					&& provinces[armies[i].provinceIndex].prevCountryIndex == armies[i].getCountryIndex())
 					armies[i].setHitPoints(armies[i].getHitPoints() - 1);
 
+			});
+	}
+
+	static void DamageArmiesWithinRadius(const std::vector<tArmyIndex>& armyIndices, std::vector<Army>& armies, ShallowTest::Vector2 point, float radius)
+	{
+		OPTICK_EVENT(__FUNCTION__);
+		parallelFor(armyIndices, [&](int i)
+			{
+				Army& army = armies[i];
+				if ((point - army.position).Length() < radius)
+				{
+					army.setHitPoints(0);
+				}
 			});
 	}
 

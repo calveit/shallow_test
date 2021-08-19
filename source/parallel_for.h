@@ -39,12 +39,17 @@ void slice(const std::vector<T>& v, int m, int n, std::vector<T>& vec)
 
 	const int num_threads = std::min((int)size, (int)std::thread::hardware_concurrency());
 	assert(num_threads > 0);
-	const int chunkSize = (int)size / (int)num_threads;
+	const int chunkSize = std::max(1, (int)std::round((float)size / (float)num_threads));
+	int chunkCount = std::max(1, (int)(size / chunkSize));
+	chunkCount += (chunkSize * chunkCount < size) ? 1 : 0;
 
 	std::vector<std::pair<int, int>> chunks;
-	for (int i = 0; i < num_threads; ++i)
+	for (int i = 0; i < chunkCount; ++i)
 	{
-		chunks.emplace_back(i * chunkSize, i * chunkSize + std::min(chunkSize, (int)size));
+		if (i * chunkSize > size)
+			break;
+
+		chunks.emplace_back(i * chunkSize, std::min(i * chunkSize + chunkSize, (int)size));
 	}
 
 	std::for_each(std::execution::par, chunks.begin(), chunks.end(), [&](const std::pair<int, int>& pair)
